@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 
 use \App\MenuItem;
 
+use App\User;
+
 class RestaurantController extends Controller
 {
     protected $restaurant;
@@ -90,10 +92,30 @@ class RestaurantController extends Controller
      */
     public function edit($id)
     {
+        //get the user_id of the logged in user
+        $logged_in_user_id = Auth::id();
+
         //find the restaurant with the given id
         $restaurant = $this->restaurant->find($id);
+
+        //get the user_id of the user who created the Restaurant
+        $restaurant_creators_user_id = $restaurant->user_id;
+
+        //find the User Object of the restaurant creator
+        $user_creator = User::find($restaurant_creators_user_id); 
+        $created_by = $user_creator->name;
+
+        //if the user who is trying to edit the restaurant is not
+        //the one who created it redirect back
+        if($logged_in_user_id != $restaurant_creators_user_id){
+        \Session::flash('message', 'This Restaurant was created by ' . $created_by . 
+            '. You can only edit a Restaurant you have created.');
+            return back();
+        }
+
         return view('/restaurants/edit', ['restaurant'=>$restaurant]);
     }
+
 
     /**
      * Update the specified resource in storage.
@@ -133,7 +155,26 @@ class RestaurantController extends Controller
 
     public function confirmDelete($id){
         //find the restaurant with the given id
-        $restaurant = $this->restaurant->find($id);   
+        $restaurant = $this->restaurant->find($id);  
+
+        //get the user_id of the logged in user
+        $logged_in_user_id = Auth::id(); 
+
+        //get the user_id of the user who created the Restaurant
+        $restaurant_creators_user_id = $restaurant->user_id;
+
+        //find the User Object of the restaurant creator
+        $user_creator = User::find($restaurant_creators_user_id); 
+        $created_by = $user_creator->name;
+
+        //if the user who is trying to delete the restaurant is not
+        //the one who created it redirect back
+        if($logged_in_user_id != $restaurant_creators_user_id){
+        \Session::flash('message', 'This Restaurant was created by ' . $created_by . 
+            '. You can only delete a Restaurant you have created.');
+            return back();
+        }
+
         return view('/restaurants/delete', ['restaurant'=>$restaurant]);
     }
 }

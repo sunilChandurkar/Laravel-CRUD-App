@@ -54,6 +54,7 @@ class DbRestaurantRepository implements RestaurantRepositoryInterface {
 	public function updateRestaurant(Request $request, $id){
 		//find the restaurant with the given id
         $restaurant = Restaurant::find($id);
+
         //get the user input restaurant name
         $name = $request->input('restaurant-name');
         $restaurant->name = $name;
