@@ -1,0 +1,1 @@
+{"virtualbox":{"/home/vagrant/restuarantapp":{"type":null,"mount_options":[],"guestpath":"/home/vagrant/restuarantapp","hostpath":"C:/Users/Home/restuarantapp","disabled":false,"__vagrantfile":true},"/vagrant":{"guestpath":"/vagrant","hostpath":"C:/Users/Home/restuarantapp","disabled":false,"__vagrantfile":true}}}
