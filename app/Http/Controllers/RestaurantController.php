@@ -18,6 +18,11 @@ class RestaurantController extends Controller
 {
     protected $restaurant;
 
+    /**
+     * @param Object belonging to an implementation of
+     *        RestaurantRepositoryInterface
+     */
+
     public function __construct(RestaurantRepositoryInterface $restaurant){
         $this->restaurant = $restaurant;
     }
@@ -28,6 +33,7 @@ class RestaurantController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
     public function index()
     {
         //get all restaurants
@@ -41,6 +47,7 @@ class RestaurantController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
     public function create()
     {
         return view('/restaurants/create');
@@ -52,6 +59,7 @@ class RestaurantController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
+
     public function store(Request $request)
     {
         //validate input
@@ -69,9 +77,10 @@ class RestaurantController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  int  $id id of the restaurant
      * @return \Illuminate\Http\Response
      */
+
     public function show($id)
     {
         //find the restaurant
@@ -87,32 +96,25 @@ class RestaurantController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  int  $id id of the restaurant
      * @return \Illuminate\Http\Response
      */
+
     public function edit($id)
     {
-        //get the user_id of the logged in user
-        $logged_in_user_id = Auth::id();
-
-        //find the restaurant with the given id
-        $restaurant = $this->restaurant->find($id);
-
-        //get the user_id of the user who created the Restaurant
-        $restaurant_creators_user_id = $restaurant->user_id;
-
-        //find the User Object of the restaurant creator
-        $user_creator = User::find($restaurant_creators_user_id); 
-        $created_by = $user_creator->name;
+        //find the User name of the restaurant creator
+        $created_by = $this->get_restaurant_creators_name($id);
 
         //if the user who is trying to edit the restaurant is not
         //the one who created it redirect back
-        if($logged_in_user_id != $restaurant_creators_user_id){
+        if(!$this->match_user_ids($id)){
         \Session::flash('message', 'This Restaurant was created by ' . $created_by . 
             '. You can only edit a Restaurant you have created.');
             return back();
         }
 
+        //find the restaurant
+        $restaurant = $this->restaurant->find($id);
         return view('/restaurants/edit', ['restaurant'=>$restaurant]);
     }
 
@@ -121,9 +123,10 @@ class RestaurantController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  int  $id id of the restaurant
      * @return \Illuminate\Http\Response
      */
+
     public function update(Request $request, $id)
     {
         //validate input
@@ -144,6 +147,7 @@ class RestaurantController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+
     public function destroy($id)
     {
         //delete the restaurant
@@ -153,28 +157,73 @@ class RestaurantController extends Controller
         return redirect('/');
     }
 
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+
     public function confirmDelete($id){
-        //find the restaurant with the given id
-        $restaurant = $this->restaurant->find($id);  
-
-        //get the user_id of the logged in user
-        $logged_in_user_id = Auth::id(); 
-
-        //get the user_id of the user who created the Restaurant
-        $restaurant_creators_user_id = $restaurant->user_id;
-
-        //find the User Object of the restaurant creator
-        $user_creator = User::find($restaurant_creators_user_id); 
-        $created_by = $user_creator->name;
-
+ 
+        //find the User name of the restaurant creator
+        $created_by = $this->get_restaurant_creators_name($id);
+        
         //if the user who is trying to delete the restaurant is not
         //the one who created it redirect back
-        if($logged_in_user_id != $restaurant_creators_user_id){
+        if(!$this->match_user_ids($id)){
         \Session::flash('message', 'This Restaurant was created by ' . $created_by . 
             '. You can only delete a Restaurant you have created.');
             return back();
         }
 
+        //find the restaurant with the given id
+        $restaurant = $this->restaurant->find($id); 
+
         return view('/restaurants/delete', ['restaurant'=>$restaurant]);
+    }
+
+    /**
+     * This function matches the User ID of the logged In User
+     * with the USer ID of the User who has created the Restaurant.
+     * @param int $id id of the restaurant
+     * @return bool - true if the ids match, false otherwise
+     */
+    public function match_user_ids($id){
+
+        //get the user_id of the logged in user
+        $logged_in_user_id = Auth::id(); 
+
+        //find the restaurant with the given id
+        $restaurant = $this->restaurant->find($id); 
+
+        //get the user_id of the user who created the Restaurant
+        $restaurant_creators_user_id = $restaurant->user_id;
+
+        //match the User ID of the logged In User
+        //with the USer ID of the User who has created the Restaurant.
+
+        if($logged_in_user_id==$restaurant_creators_user_id){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    /**
+     * Get Restaurant Creator's Name
+     * @param int $id id of the restaurant
+     * @return string - Restaurant Creator's Name
+     */
+    public function get_restaurant_creators_name($id){
+
+        //find the restaurant with the given id
+        $restaurant = $this->restaurant->find($id);
+
+        //find the User name of the restaurant creator
+        $created_by = $restaurant->user->name;
+        
+        return $created_by;
     }
 }
